@@ -1,5 +1,5 @@
 import { DATA_VERSION } from './types'
-import type { PlannerData, Priority, Subtask, Task } from './types'
+import type { Owner, PlannerData, Priority, Subtask, Task } from './types'
 
 /**
  * Last-write-wins merge keyed by task id, so two devices can exchange snapshot files
@@ -73,6 +73,10 @@ function normalizePriority(raw: unknown): Priority {
   return Math.min(3, Math.max(0, Math.round(raw))) as Priority
 }
 
+function normalizeOwner(raw: unknown): Owner {
+  return raw === 'jack' || raw === 'parmiss' ? raw : 'both'
+}
+
 function normalizeTask(raw: unknown): Task {
   if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.title !== 'string') {
     throw new InvalidBackupError('Every task needs an "id" and a "title".')
@@ -85,6 +89,7 @@ function normalizeTask(raw: unknown): Task {
     due: typeof raw.due === 'string' ? raw.due : null,
     time: typeof raw.time === 'string' ? raw.time : null,
     priority: normalizePriority(raw.priority),
+    owner: normalizeOwner(raw.owner),
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [],
     subtasks: Array.isArray(raw.subtasks) ? raw.subtasks.map(normalizeSubtask) : [],
     done: raw.done === true,

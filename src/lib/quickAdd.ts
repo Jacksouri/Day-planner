@@ -1,6 +1,6 @@
 import { addDays, isDayKey, startOfWeek, toDayKey } from './dates'
 import { normalizeTags } from './tasks'
-import type { Priority, Recurrence, TaskDraft } from './types'
+import type { Owner, Priority, Recurrence, TaskDraft } from './types'
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
@@ -25,6 +25,7 @@ export function parseQuickAdd(input: string, today: string = toDayKey(new Date()
   let priority: Priority = 0
   let recurrence: Recurrence | null = null
   let reminderLead: number | null = null
+  let owner: Owner | undefined
 
   text = text.replace(/\s#([\w-]+)/g, (_match, tag: string) => {
     tags.push(tag)
@@ -39,6 +40,12 @@ export function parseQuickAdd(input: string, today: string = toDayKey(new Date()
   text = text.replace(/\s@(\d+)\s*(m|min|mins|h|hr|hrs|d)?(?=\s)/gi, (_match, amount: string, unit = 'm') => {
     const multiplier = /^d/i.test(unit) ? 1440 : /^h/i.test(unit) ? 60 : 1
     reminderLead = Number(amount) * multiplier
+    return ' '
+  })
+
+  text = text.replace(/\s\+(jack|parmiss|both|us|we)(?=\s)/gi, (_match, word: string) => {
+    const lower = word.toLowerCase()
+    owner = lower === 'jack' || lower === 'parmiss' ? lower : 'both'
     return ' '
   })
 
@@ -86,6 +93,7 @@ export function parseQuickAdd(input: string, today: string = toDayKey(new Date()
     due,
     time,
     priority,
+    owner,
     tags: normalizeTags(tags),
     recurrence,
     reminderLead,

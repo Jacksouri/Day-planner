@@ -122,6 +122,49 @@ describe('App', () => {
     expect(screen.getByLabelText('Priority 3 of 3')).toHaveTextContent('!!!')
   })
 
+  it("keeps each person's tab separate and shares the shared ones", async () => {
+    render(<App />)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Jack' }))
+    await addTask('Lift weights')
+    await user.click(screen.getByRole('button', { name: 'Parmiss' }))
+    await addTask('Book flights')
+    expect(screen.queryByText('Lift weights')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Both' }))
+    await addTask('Pay rent +both')
+    expect(screen.getByText('Lift weights')).toBeInTheDocument()
+    expect(screen.getByText('Book flights')).toBeInTheDocument()
+
+    // A shared task belongs to both lists.
+    await user.click(screen.getByRole('button', { name: 'Jack' }))
+    expect(screen.getByText('Pay rent')).toBeInTheDocument()
+    expect(screen.queryByText('Book flights')).not.toBeInTheDocument()
+  })
+
+  it('remembers the person tab across reloads', async () => {
+    const { unmount } = render(<App />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Parmiss' }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent("Parmiss's day")
+    unmount()
+
+    render(<App />)
+    expect(screen.getByRole('button', { name: 'Parmiss' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('reassigns a task to the other person from its details', async () => {
+    render(<App />)
+    const user = await addTask('Water plants')
+
+    await user.click(screen.getByRole('button', { name: /Water plants/ }))
+    await user.selectOptions(screen.getByLabelText('Whose'), 'parmiss')
+
+    await user.click(screen.getByRole('button', { name: 'Jack' }))
+    expect(screen.queryByText('Water plants')).not.toBeInTheDocument()
+  })
+
   it('opens the reminders panel with its calendar escape hatch', async () => {
     render(<App />)
     const user = userEvent.setup()

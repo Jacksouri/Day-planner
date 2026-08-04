@@ -1,5 +1,5 @@
 import { addDays, addMonths } from './dates'
-import type { Recurrence, Subtask, Task, TaskDraft } from './types'
+import type { Owner, Recurrence, Subtask, Task, TaskDraft } from './types'
 
 export function createId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -14,6 +14,7 @@ export function createTask(draft: TaskDraft, now: string = new Date().toISOStrin
     due: draft.due ?? null,
     time: draft.time ?? null,
     priority: draft.priority ?? 0,
+    owner: draft.owner ?? 'both',
     tags: normalizeTags(draft.tags ?? []),
     subtasks: draft.subtasks ?? [],
     done: false,
@@ -155,12 +156,13 @@ export function allTags(tasks: Task[]): string[] {
 
 export function filterTasks(
   tasks: Task[],
-  filters: { query?: string; tag?: string | null; showDone?: boolean },
+  filters: { query?: string; tag?: string | null; showDone?: boolean; owner?: Owner | null },
 ): Task[] {
   const query = filters.query?.trim().toLowerCase() ?? ''
   return tasks.filter((task) => {
     if (!isActive(task)) return false
     if (!filters.showDone && task.done) return false
+    if (!belongsTo(task, filters.owner ?? null)) return false
     if (filters.tag && !task.tags.includes(filters.tag)) return false
     if (!query) return true
     const haystack = [task.title, task.notes, ...task.tags, ...task.subtasks.map((s) => s.title)]
@@ -168,6 +170,14 @@ export function filterTasks(
       .toLowerCase()
     return haystack.includes(query)
   })
+}
+
+/**
+ * A person's list is their own tasks plus the shared ones; `both` and `null` mean everything.
+ */
+export function belongsTo(task: Task, owner: Owner | null): boolean {
+  if (owner === null || owner === 'both') return true
+  return task.owner === owner || task.owner === 'both'
 }
 
 export function progress(tasks: Task[]): { done: number; total: number; percent: number } {

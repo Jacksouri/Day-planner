@@ -69,6 +69,17 @@ describe('parseQuickAdd', () => {
     expect(parseQuickAdd('Dusting !low', TODAY).priority).toBe(1)
   })
 
+  it('assigns a person with +name', () => {
+    expect(parseQuickAdd('Gym +jack', TODAY)).toMatchObject({ title: 'Gym', owner: 'jack' })
+    expect(parseQuickAdd('Nails +Parmiss', TODAY)).toMatchObject({ title: 'Nails', owner: 'parmiss' })
+    expect(parseQuickAdd('Rent +both', TODAY).owner).toBe('both')
+    expect(parseQuickAdd('Rent +us', TODAY).owner).toBe('both')
+  })
+
+  it('leaves the person unset so the open tab decides', () => {
+    expect(parseQuickAdd('Dishes', TODAY).owner).toBeUndefined()
+  })
+
   it('reads a reminder lead time', () => {
     expect(parseQuickAdd('Call mom 9am @30m', TODAY)).toMatchObject({ title: 'Call mom', reminderLead: 30 })
     expect(parseQuickAdd('Flight 6am @2h', TODAY).reminderLead).toBe(120)
@@ -84,11 +95,12 @@ describe('parseQuickAdd', () => {
   })
 
   it('parses everything at once', () => {
-    expect(parseQuickAdd('Email advisor tomorrow 9am #school !!! *weekly @30m', TODAY)).toEqual({
+    expect(parseQuickAdd('Email advisor tomorrow 9am #school !!! *weekly @30m +jack', TODAY)).toEqual({
       title: 'Email advisor',
       due: '2025-08-08',
       time: '09:00',
       priority: 3,
+      owner: 'jack',
       tags: ['school'],
       recurrence: { unit: 'week', interval: 1 },
       reminderLead: 30,

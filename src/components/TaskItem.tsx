@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { formatTime } from '../lib/dates'
 import { REMINDER_LEADS } from '../lib/reminders'
 import { createSubtask, isOverdue } from '../lib/tasks'
-import { PRIORITIES, priorityMarks } from '../lib/types'
-import type { Priority, Task } from '../lib/types'
+import { OWNER_LABELS, OWNERS, PRIORITIES, priorityMarks } from '../lib/types'
+import type { Owner, Priority, Task } from '../lib/types'
 
 interface Props {
   task: Task
@@ -30,7 +30,11 @@ export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove 
   }
 
   return (
-    <li className={`task priority-${task.priority}${task.done ? ' done' : ''}${overdue ? ' overdue' : ''}`}>
+    <li
+      className={`task priority-${task.priority} owner-${task.owner}${task.done ? ' done' : ''}${
+        overdue ? ' overdue' : ''
+      }`}
+    >
       <div className="task-row">
         <input
           type="checkbox"
@@ -46,6 +50,7 @@ export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove 
                 {priorityMarks(task.priority)}
               </span>
             ) : null}
+            <span className={`chip owner-${task.owner}`}>{OWNER_LABELS[task.owner]}</span>
             {task.time ? <span className="chip">{formatTime(task.time)}</span> : null}
             {task.reminderLead !== null ? (
               <span className="chip" title="Reminder set">
@@ -112,6 +117,19 @@ export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove 
                 {PRIORITIES.map((priority) => (
                   <option key={priority} value={priority}>
                     {PRIORITY_LABELS[priority]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Whose
+              <select
+                value={task.owner}
+                onChange={(event) => onEdit(task.id, { owner: event.target.value as Owner })}
+              >
+                {OWNERS.map((owner) => (
+                  <option key={owner} value={owner}>
+                    {OWNER_LABELS[owner]}
                   </option>
                 ))}
               </select>

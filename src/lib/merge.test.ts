@@ -83,6 +83,7 @@ describe('parseBackup', () => {
       due: null,
       time: null,
       priority: 0,
+      owner: 'both',
       reminderLead: null,
       tags: [],
       subtasks: [],
@@ -113,6 +114,17 @@ describe('parseBackup', () => {
       recurrence: null,
       due: null,
     })
+  })
+
+  it('keeps known owners and treats anything else as shared', () => {
+    const parsed = parseBackup({
+      tasks: [
+        { id: 'a', title: 'a', owner: 'jack' },
+        { id: 'b', title: 'b', owner: 'parmiss' },
+        { id: 'c', title: 'c', owner: 'someone-else' },
+      ],
+    })
+    expect(parsed.tasks.map((t) => t.owner)).toEqual(['jack', 'parmiss', 'both'])
   })
 
   it('migrates the old named priorities and clamps numeric ones', () => {

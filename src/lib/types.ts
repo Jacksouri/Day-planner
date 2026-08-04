@@ -7,6 +7,17 @@ export function priorityMarks(priority: Priority): string {
   return '!'.repeat(priority)
 }
 
+/** Whose task it is; `both` is shared and shows up for either person. */
+export type Owner = 'jack' | 'parmiss' | 'both'
+
+export const OWNERS: Owner[] = ['both', 'jack', 'parmiss']
+
+export const OWNER_LABELS: Record<Owner, string> = {
+  both: 'Both',
+  jack: 'Jack',
+  parmiss: 'Parmiss',
+}
+
 export type RecurrenceUnit = 'day' | 'week' | 'month'
 
 export interface Recurrence {
@@ -29,6 +40,7 @@ export interface Task {
   /** Optional time of day as `HH:MM`. */
   time: string | null
   priority: Priority
+  owner: Owner
   tags: string[]
   subtasks: Subtask[]
   done: boolean
@@ -57,6 +69,7 @@ export interface TaskDraft {
   due?: string | null
   time?: string | null
   priority?: Priority
+  owner?: Owner
   tags?: string[]
   subtasks?: Subtask[]
   recurrence?: Recurrence | null
