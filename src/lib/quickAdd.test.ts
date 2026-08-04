@@ -10,9 +10,10 @@ describe('parseQuickAdd', () => {
       title: 'Buy milk',
       due: null,
       time: null,
-      priority: 'normal',
+      priority: 0,
       tags: [],
       recurrence: null,
+      reminderLead: null,
     })
   })
 
@@ -53,14 +54,26 @@ describe('parseQuickAdd', () => {
     expect(parseQuickAdd('Dishes tonight', TODAY)).toMatchObject({ due: TODAY, time: '20:00' })
   })
 
-  it('reads tags and priority', () => {
-    expect(parseQuickAdd('Essay #school #School !high', TODAY)).toMatchObject({
+  it('reads tags', () => {
+    expect(parseQuickAdd('Essay #school #School', TODAY)).toMatchObject({
       title: 'Essay',
       tags: ['school'],
-      priority: 'high',
     })
-    expect(parseQuickAdd('Dusting !low', TODAY).priority).toBe('low')
-    expect(parseQuickAdd('Urgent thing !!', TODAY).priority).toBe('high')
+  })
+
+  it('counts exclamation marks as priority 1 to 3', () => {
+    expect(parseQuickAdd('Dusting !', TODAY)).toMatchObject({ title: 'Dusting', priority: 1 })
+    expect(parseQuickAdd('Essay !!', TODAY)).toMatchObject({ title: 'Essay', priority: 2 })
+    expect(parseQuickAdd('Taxes !!!', TODAY)).toMatchObject({ title: 'Taxes', priority: 3 })
+    expect(parseQuickAdd('Taxes !high', TODAY).priority).toBe(3)
+    expect(parseQuickAdd('Dusting !low', TODAY).priority).toBe(1)
+  })
+
+  it('reads a reminder lead time', () => {
+    expect(parseQuickAdd('Call mom 9am @30m', TODAY)).toMatchObject({ title: 'Call mom', reminderLead: 30 })
+    expect(parseQuickAdd('Flight 6am @2h', TODAY).reminderLead).toBe(120)
+    expect(parseQuickAdd('Renew passport @1d', TODAY).reminderLead).toBe(1440)
+    expect(parseQuickAdd('Standup 9am @15', TODAY).reminderLead).toBe(15)
   })
 
   it('reads recurrence', () => {
@@ -71,13 +84,14 @@ describe('parseQuickAdd', () => {
   })
 
   it('parses everything at once', () => {
-    expect(parseQuickAdd('Email advisor tomorrow 9am #school !high *weekly', TODAY)).toEqual({
+    expect(parseQuickAdd('Email advisor tomorrow 9am #school !!! *weekly @30m', TODAY)).toEqual({
       title: 'Email advisor',
       due: '2025-08-08',
       time: '09:00',
-      priority: 'high',
+      priority: 3,
       tags: ['school'],
       recurrence: { unit: 'week', interval: 1 },
+      reminderLead: 30,
     })
   })
 

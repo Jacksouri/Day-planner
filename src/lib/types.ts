@@ -1,4 +1,11 @@
-export type Priority = 'low' | 'normal' | 'high'
+/** 0 = none, then one, two or three exclamation marks. */
+export type Priority = 0 | 1 | 2 | 3
+
+export const PRIORITIES: Priority[] = [0, 1, 2, 3]
+
+export function priorityMarks(priority: Priority): string {
+  return '!'.repeat(priority)
+}
 
 export type RecurrenceUnit = 'day' | 'week' | 'month'
 
@@ -26,6 +33,8 @@ export interface Task {
   subtasks: Subtask[]
   done: boolean
   completedAt: string | null
+  /** Minutes before the scheduled time to remind, or null for no reminder. */
+  reminderLead: number | null
   recurrence: Recurrence | null
   createdAt: string
   updatedAt: string
@@ -51,4 +60,5 @@ export interface TaskDraft {
   tags?: string[]
   subtasks?: Subtask[]
   recurrence?: Recurrence | null
+  reminderLead?: number | null
 }

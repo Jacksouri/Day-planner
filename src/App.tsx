@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react'
 import './App.css'
 import { QuickAdd } from './components/QuickAdd'
+import { RemindersPanel } from './components/RemindersPanel'
 import { SyncPanel } from './components/SyncPanel'
 import { TaskItem } from './components/TaskItem'
 import { addDays, formatDayLabel, toDayKey, weekDays } from './lib/dates'
 import { allTags, backlogTasks, filterTasks, progress, sortTasks, tasksForDay } from './lib/tasks'
 import { usePlanner } from './lib/usePlanner'
+import { useReminders } from './lib/useReminders'
 import type { Task } from './lib/types'
 
 type View = 'today' | 'week' | 'all'
+type Panel = 'reminders' | 'sync' | null
 
 export default function App() {
   const planner = usePlanner()
@@ -17,7 +20,8 @@ export default function App() {
   const [query, setQuery] = useState('')
   const [tag, setTag] = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
-  const [showSync, setShowSync] = useState(false)
+  const [panel, setPanel] = useState<Panel>(null)
+  const reminders = useReminders(planner.tasks)
 
   const today = toDayKey(new Date())
   const visible = useMemo(
@@ -59,13 +63,16 @@ export default function App() {
               {option === 'today' ? 'Day' : option === 'week' ? 'Week' : 'All'}
             </button>
           ))}
-          <button
-            type="button"
-            className={showSync ? 'active' : undefined}
-            onClick={() => setShowSync((value) => !value)}
-          >
-            Sync
-          </button>
+          {(['reminders', 'sync'] as const).map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={panel === option ? 'active' : undefined}
+              onClick={() => setPanel(panel === option ? null : option)}
+            >
+              {option === 'reminders' ? 'Reminders' : 'Sync'}
+            </button>
+          ))}
         </nav>
       </header>
 
@@ -101,7 +108,8 @@ export default function App() {
         ) : null}
       </div>
 
-      {showSync ? (
+      {panel === 'reminders' ? <RemindersPanel tasks={planner.tasks} reminders={reminders} /> : null}
+      {panel === 'sync' ? (
         <SyncPanel data={planner.data} onMerge={planner.mergeIn} onReplace={planner.replaceData} />
       ) : null}
 

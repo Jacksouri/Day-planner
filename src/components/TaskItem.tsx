@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { formatTime } from '../lib/dates'
+import { REMINDER_LEADS } from '../lib/reminders'
 import { createSubtask, isOverdue } from '../lib/tasks'
+import { PRIORITIES, priorityMarks } from '../lib/types'
 import type { Priority, Task } from '../lib/types'
 
 interface Props {
@@ -12,7 +14,7 @@ interface Props {
   onRemove(id: string): void
 }
 
-const PRIORITIES: Priority[] = ['low', 'normal', 'high']
+const PRIORITY_LABELS = ['none', '! low', '!! medium', '!!! urgent']
 
 export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove }: Props) {
   const [open, setOpen] = useState(false)
@@ -39,7 +41,17 @@ export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove 
         <button type="button" className="task-title" onClick={() => setOpen((value) => !value)}>
           <span>{task.title}</span>
           <span className="task-meta">
+            {task.priority > 0 ? (
+              <span className="marks" aria-label={`Priority ${task.priority} of 3`}>
+                {priorityMarks(task.priority)}
+              </span>
+            ) : null}
             {task.time ? <span className="chip">{formatTime(task.time)}</span> : null}
+            {task.reminderLead !== null ? (
+              <span className="chip" title="Reminder set">
+                🔔
+              </span>
+            ) : null}
             {overdue ? <span className="chip warn">overdue</span> : null}
             {task.recurrence ? (
               <span className="chip" title={`Repeats every ${task.recurrence.interval} ${task.recurrence.unit}`}>
@@ -95,11 +107,29 @@ export function TaskItem({ task, today, onToggle, onToggleSub, onEdit, onRemove 
               Priority
               <select
                 value={task.priority}
-                onChange={(event) => onEdit(task.id, { priority: event.target.value as Priority })}
+                onChange={(event) => onEdit(task.id, { priority: Number(event.target.value) as Priority })}
               >
                 {PRIORITIES.map((priority) => (
                   <option key={priority} value={priority}>
-                    {priority}
+                    {PRIORITY_LABELS[priority]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Reminder
+              <select
+                value={task.reminderLead ?? ''}
+                onChange={(event) =>
+                  onEdit(task.id, {
+                    reminderLead: event.target.value === '' ? null : Number(event.target.value),
+                  })
+                }
+              >
+                <option value="">none</option>
+                {REMINDER_LEADS.map((lead) => (
+                  <option key={lead.minutes} value={lead.minutes}>
+                    {lead.label}
                   </option>
                 ))}
               </select>

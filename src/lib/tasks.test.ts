@@ -28,7 +28,7 @@ describe('createTask', () => {
     const created = createTask({ title: '  Water plants  ', notes: '  in the den ' }, NOW)
     expect(created.title).toBe('Water plants')
     expect(created.notes).toBe('in the den')
-    expect(created).toMatchObject({ priority: 'normal', due: null, done: false, deletedAt: null })
+    expect(created).toMatchObject({ priority: 0, due: null, done: false, deletedAt: null, reminderLead: null })
     expect(created.createdAt).toBe(NOW)
   })
 
@@ -159,9 +159,9 @@ describe('sortTasks', () => {
         task({ id: 'done', due: today, done: true }),
         task({ id: 'noon', due: today, time: '12:00' }),
         task({ id: 'overdue', due: '2025-08-01' }),
-        task({ id: 'untimed-high', due: today, priority: 'high' }),
+        task({ id: 'untimed-high', due: today, priority: 3 }),
         task({ id: 'morning', due: today, time: '08:00' }),
-        task({ id: 'untimed-low', due: today, priority: 'low' }),
+        task({ id: 'untimed-low', due: today, priority: 1 }),
       ],
       today,
     )

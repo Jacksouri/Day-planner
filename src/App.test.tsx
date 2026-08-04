@@ -115,6 +115,22 @@ describe('App', () => {
     expect(within(someday).getByText('Learn guitar')).toBeInTheDocument()
   })
 
+  it('marks quick-added priority with exclamation marks', async () => {
+    render(<App />)
+    await addTask('File taxes !!!')
+
+    expect(screen.getByLabelText('Priority 3 of 3')).toHaveTextContent('!!!')
+  })
+
+  it('opens the reminders panel with its calendar escape hatch', async () => {
+    render(<App />)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Reminders' }))
+
+    expect(screen.getByRole('heading', { name: 'Reminders' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Add to phone calendar/ })).toBeInTheDocument()
+  })
+
   it('exposes sync and backup controls', async () => {
     render(<App />)
     const user = userEvent.setup()

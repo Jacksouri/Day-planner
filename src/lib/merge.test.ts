@@ -82,7 +82,8 @@ describe('parseBackup', () => {
       notes: '',
       due: null,
       time: null,
-      priority: 'normal',
+      priority: 0,
+      reminderLead: null,
       tags: [],
       subtasks: [],
       done: false,
@@ -98,13 +99,33 @@ describe('parseBackup', () => {
           id: 'a',
           title: 'Odd',
           priority: 'urgent',
+          reminderLead: -5,
           tags: ['ok', 7],
           recurrence: { unit: 'fortnight', interval: 3 },
           due: 42,
         },
       ],
     })
-    expect(parsed.tasks[0]).toMatchObject({ priority: 'normal', tags: ['ok'], recurrence: null, due: null })
+    expect(parsed.tasks[0]).toMatchObject({
+      priority: 0,
+      reminderLead: null,
+      tags: ['ok'],
+      recurrence: null,
+      due: null,
+    })
+  })
+
+  it('migrates the old named priorities and clamps numeric ones', () => {
+    const parsed = parseBackup({
+      tasks: [
+        { id: 'a', title: 'a', priority: 'high' },
+        { id: 'b', title: 'b', priority: 'low' },
+        { id: 'c', title: 'c', priority: 'normal' },
+        { id: 'd', title: 'd', priority: 9 },
+        { id: 'e', title: 'e', priority: -2 },
+      ],
+    })
+    expect(parsed.tasks.map((t) => t.priority)).toEqual([3, 1, 0, 3, 0])
   })
 
   it('normalizes bad recurrence intervals', () => {
