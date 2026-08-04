@@ -1,18 +1,29 @@
 import { useMemo, useState } from 'react'
 import './App.css'
+import { LockScreen } from './components/LockScreen'
+import { PrivacyPanel } from './components/PrivacyPanel'
 import { QuickAdd } from './components/QuickAdd'
 import { RemindersPanel } from './components/RemindersPanel'
 import { SyncPanel } from './components/SyncPanel'
 import { TaskItem } from './components/TaskItem'
 import { addDays, formatDayLabel, toDayKey, weekDays } from './lib/dates'
+import type { KeyValueStore } from './lib/storage'
 import { allTags, backlogTasks, filterTasks, progress, sortTasks, tasksForDay } from './lib/tasks'
+import { useLock } from './lib/useLock'
+import type { Lock } from './lib/useLock'
 import { usePlanner } from './lib/usePlanner'
 import { useReminders } from './lib/useReminders'
 import { OWNER_LABELS, OWNERS } from './lib/types'
 import type { Owner, Task } from './lib/types'
 
 type View = 'today' | 'week' | 'all'
-type Panel = 'reminders' | 'sync' | null
+type Panel = 'reminders' | 'sync' | 'privacy' | null
+
+const PANEL_LABELS: Record<Exclude<Panel, null>, string> = {
+  reminders: 'Reminders',
+  sync: 'Sync',
+  privacy: 'Privacy',
+}
 
 const OWNER_KEY = 'day-planner:owner'
 
@@ -22,7 +33,26 @@ function storedOwner(): Owner {
 }
 
 export default function App() {
-  const planner = usePlanner()
+  const backing = useMemo(
+    () => (typeof localStorage === 'undefined' ? memoryBacking() : localStorage),
+    [],
+  )
+  const lock = useLock(backing)
+  if (lock.state === 'locked') return <LockScreen lock={lock} />
+  return <Planner lock={lock} />
+}
+
+function memoryBacking(): KeyValueStore {
+  const map = new Map<string, string>()
+  return {
+    getItem: (key) => map.get(key) ?? null,
+    setItem: (key, value) => void map.set(key, value),
+    removeItem: (key) => void map.delete(key),
+  }
+}
+
+function Planner({ lock }: { lock: Lock }) {
+  const planner = usePlanner(lock.store ?? undefined)
   const [view, setView] = useState<View>('today')
   const [anchor, setAnchor] = useState(() => toDayKey(new Date()))
   const [query, setQuery] = useState('')
@@ -89,14 +119,14 @@ export default function App() {
               {option === 'today' ? 'Day' : option === 'week' ? 'Week' : 'All'}
             </button>
           ))}
-          {(['reminders', 'sync'] as const).map((option) => (
+          {(['reminders', 'sync', 'privacy'] as const).map((option) => (
             <button
               key={option}
               type="button"
               className={panel === option ? 'active' : undefined}
               onClick={() => setPanel(panel === option ? null : option)}
             >
-              {option === 'reminders' ? 'Reminders' : 'Sync'}
+              {PANEL_LABELS[option]}
             </button>
           ))}
         </nav>
@@ -141,8 +171,14 @@ export default function App() {
 
       {panel === 'reminders' ? <RemindersPanel tasks={planner.tasks} reminders={reminders} /> : null}
       {panel === 'sync' ? (
-        <SyncPanel data={planner.data} onMerge={planner.mergeIn} onReplace={planner.replaceData} />
+        <SyncPanel
+          data={planner.data}
+          vaultPassphrase={lock.passphrase}
+          onMerge={planner.mergeIn}
+          onReplace={planner.replaceData}
+        />
       ) : null}
+      {panel === 'privacy' ? <PrivacyPanel lock={lock} /> : null}
 
       {view === 'today' ? (
         <section className="panel">

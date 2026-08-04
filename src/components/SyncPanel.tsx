@@ -2,9 +2,12 @@ import { useRef, useState } from 'react'
 import { InvalidBackupError } from '../lib/merge'
 import { backupFileName, createFileHandleAdapter, readBackupFile, serializeBackup, syncWith } from '../lib/sync'
 import type { PlannerData } from '../lib/types'
+import { openVault, WrongPassphraseError } from '../lib/vault'
 
 interface Props {
   data: PlannerData
+  /** Set when the planner is locked; snapshots are then written encrypted. */
+  vaultPassphrase: string | null
   onMerge(remote: PlannerData): PlannerData
   onReplace(next: PlannerData): void
 }
@@ -13,26 +16,33 @@ interface FilePickerWindow {
   showOpenFilePicker?(options?: unknown): Promise<Array<Parameters<typeof createFileHandleAdapter>[0]>>
 }
 
-export function SyncPanel({ data, onMerge, onReplace }: Props) {
+export function SyncPanel({ data, vaultPassphrase, onMerge, onReplace }: Props) {
   const fileInput = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<string | null>(null)
   const syncFile = useRef<Parameters<typeof createFileHandleAdapter>[0] | null>(null)
   const canUseFileHandles = typeof window !== 'undefined' && 'showOpenFilePicker' in window
 
-  function download() {
-    const blob = new Blob([serializeBackup(data)], { type: 'application/json' })
+  async function download() {
+    const body = vaultPassphrase
+      ? JSON.stringify(await (await openVault(vaultPassphrase)).encrypt(data), null, 2)
+      : serializeBackup(data)
+    const blob = new Blob([body], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
     link.download = backupFileName()
     link.click()
     URL.revokeObjectURL(url)
-    setStatus('Saved a snapshot to your downloads.')
+    setStatus(
+      vaultPassphrase
+        ? 'Saved an encrypted snapshot to your downloads.'
+        : 'Saved a snapshot to your downloads.',
+    )
   }
 
   async function importFile(file: File, mode: 'merge' | 'replace') {
     try {
-      const remote = await readBackupFile(file)
+      const remote = await readBackupFile(file, vaultPassphrase ?? undefined)
       if (mode === 'merge') {
         const merged = onMerge(remote)
         setStatus(`Merged — ${merged.tasks.length} tasks total.`)
@@ -41,6 +51,9 @@ export function SyncPanel({ data, onMerge, onReplace }: Props) {
         setStatus(`Replaced local data with ${remote.tasks.length} tasks.`)
       }
     } catch (error) {
+      if (error instanceof WrongPassphraseError) {
+        return setStatus('That snapshot was encrypted with a different passphrase.')
+      }
       setStatus(error instanceof InvalidBackupError ? error.message : 'Could not read that file.')
     }
   }
@@ -73,10 +86,13 @@ export function SyncPanel({ data, onMerge, onReplace }: Props) {
         There is no server. Your tasks live on this device; syncing swaps a snapshot file through a folder both
         devices can see (iCloud Drive, Dropbox, Google Drive, AirDrop). Merging is safe to repeat — the newest
         edit of each task wins.
+        {vaultPassphrase
+          ? ' Snapshots are encrypted with your passphrase, so the file is unreadable in that folder.'
+          : ''}
       </p>
 
       <div className="row">
-        <button type="button" onClick={download}>
+        <button type="button" onClick={() => void download()}>
           Export snapshot
         </button>
         <button type="button" onClick={() => fileInput.current?.click()}>
