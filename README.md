@@ -42,6 +42,11 @@ belongs to that person — so switching tab is all you normally have to do. To o
 `+jack`, `+parmiss` or `+both` in the quick-add box, or change **Whose** in a task's details. The tab
 you were last in is remembered.
 
+Switching tab recolours the entire app — background, buttons, panels — with the new colour sweeping
+out from the tab you tapped. On iPhone the bars above and below the app follow the same colour
+instead of staying the icon's red. If you have "Reduce Motion" on, the colours change without the
+sweep.
+
 ## Reminders and notifications
 
 Open a task's details and pick a **Reminder** (at the time, 15 minutes before, 1 day before, …), or
@@ -142,6 +147,8 @@ npm run build      # production build into dist/
 | `src/lib/vault.ts` | PBKDF2 + AES-GCM passphrase encryption |
 | `src/lib/vaultStore.ts` | A `KeyValueStore` whose contents persist as one encrypted blob |
 | `src/lib/useLock.ts` | Lock state, unlocking, and the `#k=` secret link |
+| `src/lib/useOwnerTheme.ts` | Tints the page and the iOS status bars for the open tab |
+| `src/lib/useSweep.ts` | The colour wipe played when you switch person |
 | `src/lib/usePlanner.ts` | React state on top of the pure logic |
 | `src/lib/useReminders.ts` | Notification permission and in-page reminder timers |
 | `src/components/` | Quick add, task rows, reminders, sync, privacy and lock screens |

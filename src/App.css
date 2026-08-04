@@ -13,13 +13,21 @@
   --radius: 12px;
 }
 
-/* Each person's tab recolours the accent, so a glance tells you whose list you are in. */
+/* Each person's tab recolours the whole palette, so a glance tells you whose list you are in. */
+:root[data-owner='jack'],
 .app[data-owner='jack'] {
   --accent: var(--jack);
+  --bg: #0d1714;
+  --panel: #15201c;
+  --panel-2: #1b2a25;
 }
 
+:root[data-owner='parmiss'],
 .app[data-owner='parmiss'] {
   --accent: var(--parmiss);
+  --bg: #14111d;
+  --panel: #1d1928;
+  --panel-2: #251f33;
 }
 
 .app[data-owner='jack'] button.active,
@@ -36,15 +44,45 @@
     --muted: #5c6779;
     --accent: #2f5fd0;
   }
+
+  :root[data-owner='jack'],
+  .app[data-owner='jack'] {
+    --accent: #0f9f6e;
+    --bg: #eff9f4;
+    --panel: #ffffff;
+    --panel-2: #e3f3ea;
+  }
+
+  :root[data-owner='parmiss'],
+  .app[data-owner='parmiss'] {
+    --accent: #7c5cd6;
+    --bg: #f6f3fd;
+    --panel: #ffffff;
+    --panel-2: #ece5fb;
+  }
 }
 
 * {
   box-sizing: border-box;
 }
 
+.panel,
+.task,
+.quick-add,
+button,
+input,
+select,
+textarea {
+  transition:
+    background-color 450ms ease,
+    border-color 450ms ease,
+    color 450ms ease;
+}
+
 body {
   margin: 0;
   background: var(--bg);
+  transition: background-color 450ms ease;
   color: var(--text);
   font: 16px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-text-size-adjust: 100%;
@@ -320,6 +358,60 @@ input[type='checkbox'] {
 .chip.owner-parmiss {
   color: var(--parmiss);
   background: rgba(196, 181, 253, 0.18);
+}
+
+/* The new colour wipes across the screen from the tab that was tapped. */
+.sweep {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--sweep-x) var(--sweep-y),
+    var(--sweep-color) 0%,
+    color-mix(in srgb, var(--sweep-color) 45%, transparent) 55%,
+    transparent 100%
+  );
+  clip-path: circle(0 at var(--sweep-x) var(--sweep-y));
+  animation: sweep-out 520ms ease-out forwards;
+}
+
+.sweep-both {
+  --sweep-color: #5b8cff;
+}
+
+.sweep-jack {
+  --sweep-color: var(--jack);
+}
+
+.sweep-parmiss {
+  --sweep-color: var(--parmiss);
+}
+
+@keyframes sweep-out {
+  0% {
+    clip-path: circle(0 at var(--sweep-x) var(--sweep-y));
+    opacity: 0.85;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    clip-path: circle(150% at var(--sweep-x) var(--sweep-y));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep {
+    display: none;
+  }
+
+  body,
+  .panel,
+  button {
+    transition: none;
+  }
 }
 
 .lock {

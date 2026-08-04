@@ -10,7 +10,11 @@ beforeEach(() => {
   location.hash = ''
 })
 
-afterEach(() => {
+afterEach(async () => {
+  // Vault writes are encrypted in the background, so let them land before wiping storage —
+  // otherwise a previous test's blob reappears after the next test has cleared it.
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  localStorage.clear()
   location.hash = ''
 })
 
