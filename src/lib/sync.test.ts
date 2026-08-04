@@ -3,6 +3,7 @@ import { InvalidBackupError } from './merge'
 import { emptyData } from './storage'
 import { backupFileName, createFileHandleAdapter, createMemoryAdapter, readBackupFile, serializeBackup, syncWith } from './sync'
 import { createTask } from './tasks'
+import { openVault, randomSalt, WrongPassphraseError } from './vault'
 import type { PlannerData, Task } from './types'
 
 function withTasks(tasks: Task[], deviceId = 'device-a'): PlannerData {
@@ -57,6 +58,23 @@ describe('file transport', () => {
 
   it('rejects a file that is not a snapshot', async () => {
     await expect(readBackupFile(new Blob(['nope']))).rejects.toThrow(InvalidBackupError)
+  })
+
+  it('decrypts an encrypted snapshot with the passphrase', async () => {
+    const data = withTasks([createTask({ title: 'Encrypted trip' })])
+    const envelope = await (await openVault('ours', randomSalt(), 1000)).encrypt(data)
+    const file = new Blob([JSON.stringify(envelope)], { type: 'application/json' })
+
+    expect((await readBackupFile(file, 'ours')).tasks[0].title).toBe('Encrypted trip')
+    await expect(readBackupFile(file, 'theirs')).rejects.toThrow(WrongPassphraseError)
+  })
+
+  it('says so when an encrypted snapshot arrives at a planner with no lock', async () => {
+    const envelope = await (await openVault('ours', randomSalt(), 1000)).encrypt(withTasks([]))
+
+    await expect(readBackupFile(new Blob([JSON.stringify(envelope)]))).rejects.toThrow(
+      /encrypted/,
+    )
   })
 
   it('names backups with a filesystem-safe timestamp', () => {

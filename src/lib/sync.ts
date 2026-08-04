@@ -1,5 +1,6 @@
-import { mergeData, parseBackup } from './merge'
+import { InvalidBackupError, mergeData, parseBackup } from './merge'
 import type { PlannerData } from './types'
+import { isEnvelope, openVault } from './vault'
 
 /**
  * Sync is deliberately just "read a snapshot, merge, write it back", so any place both
@@ -34,8 +35,28 @@ export function serializeBackup(data: PlannerData): string {
   return JSON.stringify(data, null, 2)
 }
 
-export async function readBackupFile(file: Blob): Promise<PlannerData> {
-  return parseBackup(await blobText(file))
+/**
+ * Reads a snapshot, decrypting it first when the file turns out to be an encrypted envelope.
+ * Throws `WrongPassphraseError` if the file was encrypted with a different passphrase.
+ */
+export async function readBackupFile(file: Blob, passphrase?: string): Promise<PlannerData> {
+  const text = await blobText(file)
+  const envelope = tryParseEnvelope(text)
+  if (!envelope) return parseBackup(text)
+  if (!passphrase) {
+    throw new InvalidBackupError('That snapshot is encrypted. Turn on the lock first, then import it.')
+  }
+  const vault = await openVault(passphrase, envelope.salt, envelope.iterations)
+  return parseBackup(await vault.decrypt(envelope))
+}
+
+function tryParseEnvelope(text: string) {
+  try {
+    const parsed = JSON.parse(text) as unknown
+    return isEnvelope(parsed) ? parsed : null
+  } catch {
+    return null
+  }
 }
 
 /** `Blob.text()` is missing on older iOS Safari, so fall back to FileReader. */

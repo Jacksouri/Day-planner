@@ -10,6 +10,8 @@ your data on your own devices. There is no account and no server.
 - **Priority 1–3** — `!`, `!!` or `!!!`, shown in red next to the task and used to sort your day.
 - **Reminders** — notifications while the planner is open, plus a calendar export so your phone
   itself alerts you (see below).
+- **Passphrase lock** — optional AES-GCM encryption of everything stored, with a secret link that
+  opens it unlocked on your own devices.
 - **More than a checkbox** — notes, steps (subtasks), tags, repeats, and a someday/unscheduled list.
 - **Offline** — installed as an app, it launches and works with no signal.
 - **Sync without a server** — see below.
@@ -79,6 +81,37 @@ your iCloud/Dropbox folder) so later syncs are a single **Sync now** click.
 Because there is no server, nothing you write leaves your devices — but that also means the app is
 your only copy, so export a snapshot now and then as a backup.
 
+## Privacy and the secret link
+
+What is public and what is not:
+
+- The **code** in this repository is public. It contains no tasks.
+- Your **tasks** live in the browser storage of each device you installed the planner on. They are
+  never uploaded anywhere, so nobody reading this repository can see them.
+
+What the lock adds, under **Privacy**:
+
+1. Pick a passphrase (both of you use the same one). Everything already stored is re-written
+   encrypted with AES-256-GCM, and the readable copy is deleted.
+2. Reopening the planner now shows a lock screen. Without the passphrase there is nothing to read,
+   even for someone holding your unlocked phone or copying the browser's storage.
+3. Exported snapshots are encrypted too, so the file sitting in iCloud Drive or Dropbox is unreadable.
+4. **Copy secret link** gives you a link ending in `#k=<passphrase>`. Open it once on each device and
+   add it to the home screen: it opens the planner already unlocked. Everything after `#` stays in the
+   browser and is never sent to GitHub or any server.
+
+Read the trade-offs before you rely on it:
+
+- **The secret link is a password.** Anyone who gets it can read the planner, so send it only to each
+  other and never post it anywhere public. Rotate it by turning on the lock again with a new
+  passphrase.
+- **There is no recovery.** Forget the passphrase and the tasks are gone for good — no reset link, and
+  nothing the author of this app can do.
+- The **web page itself** stays publicly readable; the lock protects the contents, not the address.
+  Hiding the page as well would need private hosting instead of GitHub Pages.
+- Each device has its own vault. Locking on your phone does not lock your laptop — turn it on there
+  too, with the same passphrase, so the snapshots you pass between them line up.
+
 ## Development
 
 Requires Node 22 (see `.nvmrc`).
@@ -106,9 +139,12 @@ npm run build      # production build into dist/
 | `src/lib/sync.ts` | `SyncAdapter` interface plus file-based transports |
 | `src/lib/reminders.ts` | Reminder times and which ones are due |
 | `src/lib/calendar.ts` | `.ics` export with alarms, so the phone fires reminders itself |
+| `src/lib/vault.ts` | PBKDF2 + AES-GCM passphrase encryption |
+| `src/lib/vaultStore.ts` | A `KeyValueStore` whose contents persist as one encrypted blob |
+| `src/lib/useLock.ts` | Lock state, unlocking, and the `#k=` secret link |
 | `src/lib/usePlanner.ts` | React state on top of the pure logic |
 | `src/lib/useReminders.ts` | Notification permission and in-page reminder timers |
-| `src/components/` | Quick add, task rows, reminders panel, sync panel |
+| `src/components/` | Quick add, task rows, reminders, sync, privacy and lock screens |
 
 Deletes are tombstones (`deletedAt`) rather than removals, which is what lets two devices merge
 without resurrecting deleted tasks; tombstones older than 30 days are pruned.

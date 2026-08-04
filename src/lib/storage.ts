@@ -8,6 +8,7 @@ export const STORAGE_KEY = 'day-planner/data/v1'
 export interface KeyValueStore {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
+  removeItem?(key: string): void
 }
 
 export function emptyData(deviceId: string = createId()): PlannerData {
