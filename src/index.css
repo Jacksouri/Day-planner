@@ -1,0 +1,15 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
+  background: #10131a;
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    background: #f5f7fb;
+  }
+}
