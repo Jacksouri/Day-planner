@@ -1,0 +1,92 @@
+import { describe, expect, it } from 'vitest'
+import { parseQuickAdd } from './quickAdd'
+
+// 2025-08-07 is a Thursday.
+const TODAY = '2025-08-07'
+
+describe('parseQuickAdd', () => {
+  it('keeps plain text as the title', () => {
+    expect(parseQuickAdd('Buy milk', TODAY)).toMatchObject({
+      title: 'Buy milk',
+      due: null,
+      time: null,
+      priority: 'normal',
+      tags: [],
+      recurrence: null,
+    })
+  })
+
+  it('reads relative dates', () => {
+    expect(parseQuickAdd('Gym today', TODAY).due).toBe(TODAY)
+    expect(parseQuickAdd('Gym tomorrow', TODAY).due).toBe('2025-08-08')
+    expect(parseQuickAdd('Plan next week', TODAY).due).toBe('2025-08-11')
+  })
+
+  it('reads explicit dates', () => {
+    expect(parseQuickAdd('Dentist 2025-09-01', TODAY)).toMatchObject({
+      title: 'Dentist',
+      due: '2025-09-01',
+    })
+  })
+
+  it('ignores impossible explicit dates', () => {
+    const draft = parseQuickAdd('Dentist 2025-02-31', TODAY)
+    expect(draft.due).toBeNull()
+    expect(draft.title).toBe('Dentist 2025-02-31')
+  })
+
+  it('reads the next weekday, never today', () => {
+    expect(parseQuickAdd('Laundry sunday', TODAY).due).toBe('2025-08-10')
+    expect(parseQuickAdd('Standup thursday', TODAY).due).toBe('2025-08-14')
+    expect(parseQuickAdd('Standup next fri', TODAY).due).toBe('2025-08-08')
+  })
+
+  it('reads times in 12- and 24-hour form', () => {
+    expect(parseQuickAdd('Call mom 9am', TODAY)).toMatchObject({ title: 'Call mom', time: '09:00' })
+    expect(parseQuickAdd('Call mom at 7:30pm', TODAY)).toMatchObject({ title: 'Call mom', time: '19:30' })
+    expect(parseQuickAdd('Call mom 12am', TODAY).time).toBe('00:00')
+    expect(parseQuickAdd('Call mom 12pm', TODAY).time).toBe('12:00')
+    expect(parseQuickAdd('Call mom at 14:15', TODAY).time).toBe('14:15')
+  })
+
+  it('defaults "tonight" to the evening', () => {
+    expect(parseQuickAdd('Dishes tonight', TODAY)).toMatchObject({ due: TODAY, time: '20:00' })
+  })
+
+  it('reads tags and priority', () => {
+    expect(parseQuickAdd('Essay #school #School !high', TODAY)).toMatchObject({
+      title: 'Essay',
+      tags: ['school'],
+      priority: 'high',
+    })
+    expect(parseQuickAdd('Dusting !low', TODAY).priority).toBe('low')
+    expect(parseQuickAdd('Urgent thing !!', TODAY).priority).toBe('high')
+  })
+
+  it('reads recurrence', () => {
+    expect(parseQuickAdd('Trash *weekly', TODAY).recurrence).toEqual({ unit: 'week', interval: 1 })
+    expect(parseQuickAdd('Vitamins *daily', TODAY).recurrence).toEqual({ unit: 'day', interval: 1 })
+    expect(parseQuickAdd('Rent *monthly', TODAY).recurrence).toEqual({ unit: 'month', interval: 1 })
+    expect(parseQuickAdd('Sheets *every 2 weeks', TODAY).recurrence).toEqual({ unit: 'week', interval: 2 })
+  })
+
+  it('parses everything at once', () => {
+    expect(parseQuickAdd('Email advisor tomorrow 9am #school !high *weekly', TODAY)).toEqual({
+      title: 'Email advisor',
+      due: '2025-08-08',
+      time: '09:00',
+      priority: 'high',
+      tags: ['school'],
+      recurrence: { unit: 'week', interval: 1 },
+    })
+  })
+
+  it('does not eat words that merely contain keywords', () => {
+    expect(parseQuickAdd('Satisfy monday morning ritual', TODAY).title).toBe('Satisfy morning ritual')
+    expect(parseQuickAdd('Todays plan', TODAY)).toMatchObject({ title: 'Todays plan', due: null })
+  })
+
+  it('handles empty input', () => {
+    expect(parseQuickAdd('   ', TODAY).title).toBe('')
+  })
+})
