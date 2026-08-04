@@ -16,7 +16,9 @@ export default defineConfig({
         name: 'Day Planner',
         short_name: 'Planner',
         description: 'A local-first day and week planner that works offline.',
-        theme_color: '#d92121',
+        // Matches the app background, not the icon: iOS paints the bars above and below a
+        // home-screen app with this, and red bars around a green planner looked broken.
+        theme_color: '#10131a',
         background_color: '#10131a',
         display: 'standalone',
         orientation: 'portrait',

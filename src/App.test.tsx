@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { STORAGE_KEY } from './lib/storage'
+import { THEME_COLORS } from './lib/useOwnerTheme'
 
 beforeEach(() => {
   localStorage.clear()
@@ -141,6 +142,29 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Jack' }))
     expect(screen.getByText('Pay rent')).toBeInTheDocument()
     expect(screen.queryByText('Book flights')).not.toBeInTheDocument()
+  })
+
+  it('sweeps the new colour across the screen and recolours the page', async () => {
+    render(<App />)
+    const user = userEvent.setup()
+    expect(document.documentElement.dataset.owner).toBe('both')
+    expect(screen.queryByTestId('color-sweep')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Parmiss' }))
+
+    const sweep = screen.getByTestId('color-sweep')
+    expect(sweep).toHaveClass('sweep-parmiss')
+    expect(document.documentElement.dataset.owner).toBe('parmiss')
+    expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute(
+      'content',
+      THEME_COLORS.parmiss,
+    )
+
+    // The overlay is temporary; tapping the tab you are already in does not re-run it.
+    fireEvent.animationEnd(sweep)
+    expect(screen.queryByTestId('color-sweep')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Parmiss' }))
+    expect(screen.queryByTestId('color-sweep')).not.toBeInTheDocument()
   })
 
   it('remembers the person tab across reloads', async () => {

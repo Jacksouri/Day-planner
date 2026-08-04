@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import './App.css'
+import { ColorSweep } from './components/ColorSweep'
 import { LockScreen } from './components/LockScreen'
 import { PrivacyPanel } from './components/PrivacyPanel'
 import { QuickAdd } from './components/QuickAdd'
@@ -11,8 +12,10 @@ import type { KeyValueStore } from './lib/storage'
 import { allTags, backlogTasks, filterTasks, progress, sortTasks, tasksForDay } from './lib/tasks'
 import { useLock } from './lib/useLock'
 import type { Lock } from './lib/useLock'
+import { useOwnerTheme } from './lib/useOwnerTheme'
 import { usePlanner } from './lib/usePlanner'
 import { useReminders } from './lib/useReminders'
+import { useSweep } from './lib/useSweep'
 import { OWNER_LABELS, OWNERS } from './lib/types'
 import type { Owner, Task } from './lib/types'
 
@@ -60,7 +63,10 @@ function Planner({ lock }: { lock: Lock }) {
   const [showDone, setShowDone] = useState(false)
   const [panel, setPanel] = useState<Panel>(null)
   const [owner, setOwner] = useState<Owner>(storedOwner)
+  const sweep = useSweep()
   const reminders = useReminders(planner.tasks)
+
+  useOwnerTheme(owner)
 
   const today = toDayKey(new Date())
   const visible = useMemo(
@@ -83,6 +89,7 @@ function Planner({ lock }: { lock: Lock }) {
 
   return (
     <div className="app" data-owner={owner}>
+      {sweep.sweep ? <ColorSweep sweep={sweep.sweep} onDone={sweep.clear} /> : null}
       <nav className="people" aria-label="Whose planner">
         {OWNERS.map((option) => (
           <button
@@ -90,7 +97,11 @@ function Planner({ lock }: { lock: Lock }) {
             type="button"
             className={`person person-${option}${owner === option ? ' active' : ''}`}
             aria-pressed={owner === option}
-            onClick={() => {
+            onClick={(event) => {
+              if (option !== owner) {
+                const box = event.currentTarget.getBoundingClientRect()
+                sweep.start(option, { x: box.left + box.width / 2, y: box.top + box.height / 2 })
+              }
               setOwner(option)
               localStorage.setItem(OWNER_KEY, option)
             }}
