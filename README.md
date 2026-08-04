@@ -3,11 +3,13 @@
 A day and week planner that installs on your iPhone and your computer, works offline, and keeps
 your data on your own devices. There is no account and no server.
 
-- **Quick add** — type `Email advisor tomorrow 9am #school !high *weekly` and the date, time, tag,
-  priority and repeat are all parsed out of the sentence.
+- **Quick add** — type `Email advisor tomorrow 9am #school !!! *weekly @30m` and the date, time, tag,
+  priority, repeat and reminder are all parsed out of the sentence.
 - **Day / Week / All views** — step through days and weeks; overdue tasks follow you into today.
-- **More than a checkbox** — notes, steps (subtasks), tags, priorities, repeats, and a
-  someday/unscheduled list.
+- **Priority 1–3** — `!`, `!!` or `!!!`, shown in red next to the task and used to sort your day.
+- **Reminders** — notifications while the planner is open, plus a calendar export so your phone
+  itself alerts you (see below).
+- **More than a checkbox** — notes, steps (subtasks), tags, repeats, and a someday/unscheduled list.
 - **Offline** — installed as an app, it launches and works with no signal.
 - **Sync without a server** — see below.
 
@@ -25,6 +27,26 @@ your data on your own devices. There is no account and no server.
 - **Chrome or Edge**: open the URL and click the **install** icon (a monitor with an arrow) in the
   address bar, or menu → *Cast, save and share* → *Install page as app*.
 - **Safari on Mac**: File → **Add to Dock**.
+
+## Reminders and notifications
+
+Open a task's details and pick a **Reminder** (at the time, 15 minutes before, 1 day before, …), or
+type `@30m` / `@2h` / `@1d` in the quick-add box.
+
+There are two ways they reach you, and the difference matters on iPhone:
+
+- **While the planner is open** — tap **Reminders → Enable notifications** once and it notifies you
+  directly. On iPhone this only works after the app is on your home screen.
+- **When the planner is closed** — iOS does not run a closed web app, so it cannot fire an alert on
+  its own. Instead tap **Reminders → Add to phone calendar (.ics)** and open the downloaded file:
+  every scheduled task becomes a calendar event carrying its own alarm, so the iPhone itself alerts
+  you. Repeats become real repeating events.
+
+### About widgets
+
+iOS home screen widgets can only be built by a native app, so this web app cannot provide one. The
+practical substitute is the calendar export above: the tasks land in the stock **Calendar** app, and
+its widget then shows your upcoming tasks on the home screen. Re-export after you add tasks.
 
 ## Sync between phone and computer
 
@@ -70,8 +92,11 @@ npm run build      # production build into dist/
 | `src/lib/merge.ts` | Snapshot validation and the last-write-wins merge |
 | `src/lib/storage.ts` | localStorage persistence, tombstone pruning |
 | `src/lib/sync.ts` | `SyncAdapter` interface plus file-based transports |
+| `src/lib/reminders.ts` | Reminder times and which ones are due |
+| `src/lib/calendar.ts` | `.ics` export with alarms, so the phone fires reminders itself |
 | `src/lib/usePlanner.ts` | React state on top of the pure logic |
-| `src/components/` | Quick add, task rows, sync panel |
+| `src/lib/useReminders.ts` | Notification permission and in-page reminder timers |
+| `src/components/` | Quick add, task rows, reminders panel, sync panel |
 
 Deletes are tombstones (`deletedAt`) rather than removals, which is what lets two devices merge
 without resurrecting deleted tasks; tombstones older than 30 days are pruned.

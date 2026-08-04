@@ -4,12 +4,13 @@ import type { Priority, Recurrence, TaskDraft } from './types'
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
+/** `!` … `!!!` set priority 1–3; the words are kept as friendly aliases. */
 const PRIORITY_WORDS: Record<string, Priority> = {
-  '!': 'high',
-  '!!': 'high',
-  high: 'high',
-  low: 'low',
-  normal: 'normal',
+  '': 1,
+  '!': 2,
+  '!!': 3,
+  low: 1,
+  high: 3,
 }
 
 /**
@@ -21,16 +22,23 @@ export function parseQuickAdd(input: string, today: string = toDayKey(new Date()
   const tags: string[] = []
   let due: string | null = null
   let time: string | null = null
-  let priority: Priority = 'normal'
+  let priority: Priority = 0
   let recurrence: Recurrence | null = null
+  let reminderLead: number | null = null
 
   text = text.replace(/\s#([\w-]+)/g, (_match, tag: string) => {
     tags.push(tag)
     return ' '
   })
 
-  text = text.replace(/\s!(!|high|low|normal)(?=\s)/gi, (_match, word: string) => {
-    priority = PRIORITY_WORDS[word.toLowerCase()] ?? 'high'
+  text = text.replace(/\s!(!?!?|high|low)(?=\s)/gi, (_match, word: string) => {
+    priority = PRIORITY_WORDS[word.toLowerCase()] ?? 1
+    return ' '
+  })
+
+  text = text.replace(/\s@(\d+)\s*(m|min|mins|h|hr|hrs|d)?(?=\s)/gi, (_match, amount: string, unit = 'm') => {
+    const multiplier = /^d/i.test(unit) ? 1440 : /^h/i.test(unit) ? 60 : 1
+    reminderLead = Number(amount) * multiplier
     return ' '
   })
 
@@ -80,6 +88,7 @@ export function parseQuickAdd(input: string, today: string = toDayKey(new Date()
     priority,
     tags: normalizeTags(tags),
     recurrence,
+    reminderLead,
   }
 }
 

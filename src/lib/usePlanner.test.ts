@@ -42,9 +42,9 @@ describe('usePlanner', () => {
       id = view.result.current.addTask({ title: 'Old' }).id
     })
 
-    act(() => view.result.current.edit(id, { title: 'New', priority: 'high' }))
+    act(() => view.result.current.edit(id, { title: 'New', priority: 3 }))
 
-    expect(view.result.current.tasks[0]).toMatchObject({ title: 'New', priority: 'high' })
+    expect(view.result.current.tasks[0]).toMatchObject({ title: 'New', priority: 3 })
   })
 
   it('completes a one-off task in place', () => {

@@ -1,7 +1,5 @@
 import { addDays, addMonths } from './dates'
-import type { Priority, Recurrence, Subtask, Task, TaskDraft } from './types'
-
-const PRIORITY_RANK: Record<Priority, number> = { high: 0, normal: 1, low: 2 }
+import type { Recurrence, Subtask, Task, TaskDraft } from './types'
 
 export function createId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
@@ -15,11 +13,12 @@ export function createTask(draft: TaskDraft, now: string = new Date().toISOStrin
     notes: draft.notes?.trim() ?? '',
     due: draft.due ?? null,
     time: draft.time ?? null,
-    priority: draft.priority ?? 'normal',
+    priority: draft.priority ?? 0,
     tags: normalizeTags(draft.tags ?? []),
     subtasks: draft.subtasks ?? [],
     done: false,
     completedAt: null,
+    reminderLead: draft.reminderLead ?? null,
     recurrence: draft.recurrence ?? null,
     createdAt: now,
     updatedAt: now,
@@ -140,7 +139,7 @@ export function sortTasks(tasks: Task[], today: string): Task[] {
       if (b.time === null) return -1
       return a.time < b.time ? -1 : 1
     }
-    if (a.priority !== b.priority) return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
+    if (a.priority !== b.priority) return b.priority - a.priority
     return a.createdAt < b.createdAt ? -1 : 1
   })
 }

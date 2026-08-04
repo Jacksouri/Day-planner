@@ -24,6 +24,28 @@ async function openDetails(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('TaskItem', () => {
+  it('shows priority as one to three exclamation marks', () => {
+    setup({ priority: 2 })
+    expect(screen.getByLabelText('Priority 2 of 3')).toHaveTextContent('!!')
+  })
+
+  it('shows no marks at priority zero', () => {
+    setup()
+    expect(screen.queryByLabelText(/Priority/)).not.toBeInTheDocument()
+  })
+
+  it('sets and clears a reminder', async () => {
+    const { task, handlers, user } = setup({ due: '2025-08-07', time: '09:00', reminderLead: 30 })
+    await openDetails(user)
+
+    expect(screen.getByTitle('Reminder set')).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText('Reminder'), '60')
+    expect(handlers.onEdit).toHaveBeenCalledWith(task.id, { reminderLead: 60 })
+
+    await user.selectOptions(screen.getByLabelText('Reminder'), '')
+    expect(handlers.onEdit).toHaveBeenLastCalledWith(task.id, { reminderLead: null })
+  })
+
   it('marks an overdue task and shows its metadata', () => {
     setup({
       due: '2025-08-01',
@@ -58,11 +80,11 @@ describe('TaskItem', () => {
     await openDetails(user)
 
     fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2025-08-09' } })
-    await user.selectOptions(screen.getByLabelText('Priority'), 'high')
+    await user.selectOptions(screen.getByLabelText('Priority'), '3')
     await user.selectOptions(screen.getByLabelText('Repeat'), '2-week')
 
     expect(handlers.onEdit).toHaveBeenCalledWith(task.id, { due: '2025-08-09' })
-    expect(handlers.onEdit).toHaveBeenCalledWith(task.id, { priority: 'high' })
+    expect(handlers.onEdit).toHaveBeenCalledWith(task.id, { priority: 3 })
     expect(handlers.onEdit).toHaveBeenCalledWith(task.id, { recurrence: { interval: 2, unit: 'week' } })
   })
 

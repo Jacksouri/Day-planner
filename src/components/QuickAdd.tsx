@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { parseQuickAdd } from '../lib/quickAdd'
+import { priorityMarks } from '../lib/types'
 import type { TaskDraft } from '../lib/types'
 
 interface Props {
@@ -24,7 +25,7 @@ export function QuickAdd({ today, defaultDue, onAdd }: Props) {
     <form className="quick-add" onSubmit={submit}>
       <input
         aria-label="Add a task"
-        placeholder="Add a task…  try: Email advisor tomorrow 9am #school !high *weekly"
+        placeholder="Add a task…  try: Email advisor tomorrow 9am #school !!! *weekly @30m"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -36,7 +37,10 @@ export function QuickAdd({ today, defaultDue, onAdd }: Props) {
           <strong>{preview.title}</strong>
           {preview.due ? <span className="chip">{preview.due}</span> : null}
           {preview.time ? <span className="chip">{preview.time}</span> : null}
-          {preview.priority !== 'normal' ? <span className="chip">{preview.priority}</span> : null}
+          {preview.priority ? <span className="marks">{priorityMarks(preview.priority)}</span> : null}
+          {preview.reminderLead !== null && preview.reminderLead !== undefined ? (
+            <span className="chip">🔔 {preview.reminderLead}m before</span>
+          ) : null}
           {preview.recurrence ? (
             <span className="chip">
               every {preview.recurrence.interval} {preview.recurrence.unit}

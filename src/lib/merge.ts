@@ -64,25 +64,33 @@ export function parseBackup(raw: unknown): PlannerData {
   }
 }
 
-const PRIORITIES: Priority[] = ['low', 'normal', 'high']
+/** Snapshots written before priorities became 0–3 used these names. */
+const LEGACY_PRIORITIES: Record<string, Priority> = { low: 1, normal: 0, high: 3 }
+
+function normalizePriority(raw: unknown): Priority {
+  if (typeof raw === 'string' && raw in LEGACY_PRIORITIES) return LEGACY_PRIORITIES[raw]
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return 0
+  return Math.min(3, Math.max(0, Math.round(raw))) as Priority
+}
 
 function normalizeTask(raw: unknown): Task {
   if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.title !== 'string') {
     throw new InvalidBackupError('Every task needs an "id" and a "title".')
   }
   const now = new Date().toISOString()
-  const priority = PRIORITIES.includes(raw.priority as Priority) ? (raw.priority as Priority) : 'normal'
   return {
     id: raw.id,
     title: raw.title,
     notes: typeof raw.notes === 'string' ? raw.notes : '',
     due: typeof raw.due === 'string' ? raw.due : null,
     time: typeof raw.time === 'string' ? raw.time : null,
-    priority,
+    priority: normalizePriority(raw.priority),
     tags: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === 'string') : [],
     subtasks: Array.isArray(raw.subtasks) ? raw.subtasks.map(normalizeSubtask) : [],
     done: raw.done === true,
     completedAt: typeof raw.completedAt === 'string' ? raw.completedAt : null,
+    reminderLead:
+      typeof raw.reminderLead === 'number' && raw.reminderLead >= 0 ? Math.round(raw.reminderLead) : null,
     recurrence: normalizeRecurrence(raw.recurrence),
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : now,
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : now,
