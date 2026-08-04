@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'Day Planner',
         short_name: 'Planner',
         description: 'A local-first day and week planner that works offline.',
-        theme_color: '#10131a',
+        theme_color: '#d92121',
         background_color: '#10131a',
         display: 'standalone',
         orientation: 'portrait',
@@ -25,7 +25,7 @@ export default defineConfig({
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
