@@ -8,10 +8,18 @@ import { addDays, formatDayLabel, toDayKey, weekDays } from './lib/dates'
 import { allTags, backlogTasks, filterTasks, progress, sortTasks, tasksForDay } from './lib/tasks'
 import { usePlanner } from './lib/usePlanner'
 import { useReminders } from './lib/useReminders'
-import type { Task } from './lib/types'
+import { OWNER_LABELS, OWNERS } from './lib/types'
+import type { Owner, Task } from './lib/types'
 
 type View = 'today' | 'week' | 'all'
 type Panel = 'reminders' | 'sync' | null
+
+const OWNER_KEY = 'day-planner:owner'
+
+function storedOwner(): Owner {
+  const raw = typeof localStorage === 'undefined' ? null : localStorage.getItem(OWNER_KEY)
+  return raw === 'jack' || raw === 'parmiss' ? raw : 'both'
+}
 
 export default function App() {
   const planner = usePlanner()
@@ -21,12 +29,13 @@ export default function App() {
   const [tag, setTag] = useState<string | null>(null)
   const [showDone, setShowDone] = useState(false)
   const [panel, setPanel] = useState<Panel>(null)
+  const [owner, setOwner] = useState<Owner>(storedOwner)
   const reminders = useReminders(planner.tasks)
 
   const today = toDayKey(new Date())
   const visible = useMemo(
-    () => filterTasks(planner.tasks, { query, tag, showDone }),
-    [planner.tasks, query, tag, showDone],
+    () => filterTasks(planner.tasks, { query, tag, showDone, owner }),
+    [planner.tasks, query, tag, showDone, owner],
   )
   const tags = useMemo(() => allTags(planner.tasks), [planner.tasks])
 
@@ -43,10 +52,27 @@ export default function App() {
   const dayProgress = progress(dayTasks)
 
   return (
-    <div className="app">
+    <div className="app" data-owner={owner}>
+      <nav className="people" aria-label="Whose planner">
+        {OWNERS.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={`person person-${option}${owner === option ? ' active' : ''}`}
+            aria-pressed={owner === option}
+            onClick={() => {
+              setOwner(option)
+              localStorage.setItem(OWNER_KEY, option)
+            }}
+          >
+            {OWNER_LABELS[option]}
+          </button>
+        ))}
+      </nav>
+
       <header>
         <div className="titles">
-          <h1>Day Planner</h1>
+          <h1>{owner === 'both' ? 'Day Planner' : `${OWNER_LABELS[owner]}'s day`}</h1>
           <p>{formatDayLabel(anchor, today)}</p>
         </div>
         <nav>
@@ -76,7 +102,12 @@ export default function App() {
         </nav>
       </header>
 
-      <QuickAdd today={today} defaultDue={view === 'all' ? null : anchor} onAdd={planner.addTask} />
+      <QuickAdd
+        today={today}
+        defaultDue={view === 'all' ? null : anchor}
+        defaultOwner={owner}
+        onAdd={planner.addTask}
+      />
 
       <div className="filters">
         <input

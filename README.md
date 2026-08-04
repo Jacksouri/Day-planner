@@ -3,8 +3,9 @@
 A day and week planner that installs on your iPhone and your computer, works offline, and keeps
 your data on your own devices. There is no account and no server.
 
-- **Quick add** — type `Email advisor tomorrow 9am #school !!! *weekly @30m` and the date, time, tag,
-  priority, repeat and reminder are all parsed out of the sentence.
+- **Quick add** — type `Email advisor tomorrow 9am #school !!! *weekly @30m +jack` and the date, time,
+  tag, priority, repeat, reminder and person are all parsed out of the sentence.
+- **Jack / Parmiss / Both tabs** — two people share one planner, each with their own colour.
 - **Day / Week / All views** — step through days and weeks; overdue tasks follow you into today.
 - **Priority 1–3** — `!`, `!!` or `!!!`, shown in red next to the task and used to sort your day.
 - **Reminders** — notifications while the planner is open, plus a calendar export so your phone
@@ -30,6 +31,14 @@ your data on your own devices. There is no account and no server.
 
 The address is `https://<your-username>.github.io/<repo-name>/`, so renaming the repository changes it.
 [docs/renaming.md](docs/renaming.md) walks through that (and custom domains) click by click.
+
+## Jack and Parmiss
+
+Three tabs across the top: **Both**, **Jack** (green) and **Parmiss** (pastel purple). A person's tab
+shows their own tasks plus everything marked shared, and anything you add while that tab is open
+belongs to that person — so switching tab is all you normally have to do. To override it, type
+`+jack`, `+parmiss` or `+both` in the quick-add box, or change **Whose** in a task's details. The tab
+you were last in is remembered.
 
 ## Reminders and notifications
 

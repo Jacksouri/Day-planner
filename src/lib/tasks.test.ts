@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   allTags,
   backlogTasks,
+  belongsTo,
   createTask,
   deleteTask,
   filterTasks,
@@ -196,6 +197,32 @@ describe('filterTasks', () => {
     expect(filterTasks(tasks, { tag: 'school' }).map((t) => t.id)).toEqual(['2'])
     expect(filterTasks(tasks, { query: 'BIOLOGY' }).map((t) => t.id)).toEqual(['2'])
     expect(filterTasks(tasks, { query: 'nothing here' })).toEqual([])
+  })
+})
+
+describe('owners', () => {
+  it('defaults new tasks to shared', () => {
+    expect(createTask({ title: 'Dishes' }, NOW).owner).toBe('both')
+  })
+
+  it("includes shared tasks in each person's list", () => {
+    const shared = task({ owner: 'both' })
+    const mine = task({ owner: 'jack' })
+    const hers = task({ owner: 'parmiss' })
+
+    expect([shared, mine, hers].filter((t) => belongsTo(t, 'jack'))).toEqual([shared, mine])
+    expect([shared, mine, hers].filter((t) => belongsTo(t, 'parmiss'))).toEqual([shared, hers])
+    expect([shared, mine, hers].filter((t) => belongsTo(t, 'both'))).toHaveLength(3)
+    expect([shared, mine, hers].filter((t) => belongsTo(t, null))).toHaveLength(3)
+  })
+
+  it('filters a list down to one person', () => {
+    const tasks = [
+      task({ id: 'a', owner: 'jack' }),
+      task({ id: 'b', owner: 'parmiss' }),
+      task({ id: 'c', owner: 'both' }),
+    ]
+    expect(filterTasks(tasks, { owner: 'parmiss' }).map((t) => t.id)).toEqual(['b', 'c'])
   })
 })
 

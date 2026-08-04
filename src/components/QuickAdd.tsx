@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { parseQuickAdd } from '../lib/quickAdd'
-import { priorityMarks } from '../lib/types'
-import type { TaskDraft } from '../lib/types'
+import { OWNER_LABELS, priorityMarks } from '../lib/types'
+import type { Owner, TaskDraft } from '../lib/types'
 
 interface Props {
   today: string
   defaultDue: string | null
+  defaultOwner: Owner
   onAdd(draft: TaskDraft): void
 }
 
-export function QuickAdd({ today, defaultDue, onAdd }: Props) {
+export function QuickAdd({ today, defaultDue, defaultOwner, onAdd }: Props) {
   const [value, setValue] = useState('')
   const preview = value.trim() ? parseQuickAdd(value, today) : null
 
@@ -17,7 +18,7 @@ export function QuickAdd({ today, defaultDue, onAdd }: Props) {
     event.preventDefault()
     const draft = parseQuickAdd(value, today)
     if (!draft.title) return
-    onAdd({ ...draft, due: draft.due ?? defaultDue })
+    onAdd({ ...draft, due: draft.due ?? defaultDue, owner: draft.owner ?? defaultOwner })
     setValue('')
   }
 
@@ -25,7 +26,7 @@ export function QuickAdd({ today, defaultDue, onAdd }: Props) {
     <form className="quick-add" onSubmit={submit}>
       <input
         aria-label="Add a task"
-        placeholder="Add a task…  try: Email advisor tomorrow 9am #school !!! *weekly @30m"
+        placeholder="Add a task…  try: Email advisor tomorrow 9am #school !!! *weekly @30m +jack"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -35,6 +36,9 @@ export function QuickAdd({ today, defaultDue, onAdd }: Props) {
       {preview?.title ? (
         <p className="quick-add-preview">
           <strong>{preview.title}</strong>
+          <span className={`chip owner-${preview.owner ?? defaultOwner}`}>
+            {OWNER_LABELS[preview.owner ?? defaultOwner]}
+          </span>
           {preview.due ? <span className="chip">{preview.due}</span> : null}
           {preview.time ? <span className="chip">{preview.time}</span> : null}
           {preview.priority ? <span className="marks">{priorityMarks(preview.priority)}</span> : null}

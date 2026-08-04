@@ -8,7 +8,23 @@
   --warn: #ff8f6b;
   --high: #ff6b81;
   --low: #6ee7b7;
+  --jack: #34d399;
+  --parmiss: #c4b5fd;
   --radius: 12px;
+}
+
+/* Each person's tab recolours the accent, so a glance tells you whose list you are in. */
+.app[data-owner='jack'] {
+  --accent: var(--jack);
+}
+
+.app[data-owner='parmiss'] {
+  --accent: var(--parmiss);
+}
+
+.app[data-owner='jack'] button.active,
+.app[data-owner='parmiss'] button.active {
+  color: #10131a;
 }
 
 @media (prefers-color-scheme: light) {
@@ -221,6 +237,14 @@ input[type='checkbox'] {
   padding: 8px 10px;
 }
 
+.task.owner-jack {
+  box-shadow: inset 3px 0 0 rgba(52, 211, 153, 0.55);
+}
+
+.task.owner-parmiss {
+  box-shadow: inset 3px 0 0 rgba(196, 181, 253, 0.6);
+}
+
 .task.priority-1 {
   border-left-color: rgba(255, 107, 129, 0.4);
 }
@@ -286,6 +310,51 @@ input[type='checkbox'] {
 
 .chip.warn {
   color: var(--warn);
+}
+
+.chip.owner-jack {
+  color: var(--jack);
+  background: rgba(52, 211, 153, 0.16);
+}
+
+.chip.owner-parmiss {
+  color: var(--parmiss);
+  background: rgba(196, 181, 253, 0.18);
+}
+
+.people {
+  display: flex;
+  gap: 6px;
+}
+
+.people .person {
+  flex: 1;
+  border: 1px solid rgba(127, 140, 170, 0.3);
+  background: transparent;
+  font-weight: 600;
+}
+
+.people .person-jack {
+  color: var(--jack);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.people .person-parmiss {
+  color: var(--parmiss);
+  border-color: rgba(196, 181, 253, 0.5);
+}
+
+.people .person.active {
+  color: #10131a;
+  background: var(--muted);
+}
+
+.people .person-jack.active {
+  background: var(--jack);
+}
+
+.people .person-parmiss.active {
+  background: var(--parmiss);
 }
 
 .task-detail {
