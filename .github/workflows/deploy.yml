@@ -24,9 +24,17 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The site lives under /<repo>/ unless the repo is the owner's user site, which is served at /.
+      - name: Resolve base path
+        run: |
+          name="${GITHUB_REPOSITORY#*/}"
+          user_site="$(echo "$GITHUB_REPOSITORY_OWNER.github.io" | tr '[:upper:]' '[:lower:]')"
+          if [ "$(echo "$name" | tr '[:upper:]' '[:lower:]')" = "$user_site" ]; then
+            echo "VITE_BASE=/" >> "$GITHUB_ENV"
+          else
+            echo "VITE_BASE=/$name/" >> "$GITHUB_ENV"
+          fi
       - run: npm run build
-        env:
-          VITE_BASE: /${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

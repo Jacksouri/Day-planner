@@ -26,6 +26,9 @@ your data on your own devices. There is no account and no server.
   address bar, or menu → *Cast, save and share* → *Install page as app*.
 - **Safari on Mac**: File → **Add to Dock**.
 
+The address is `https://<your-username>.github.io/<repo-name>/`, so renaming the repository changes it.
+[docs/renaming.md](docs/renaming.md) walks through that (and custom domains) click by click.
+
 ## Sync between phone and computer
 
 There is no server, so sync works by passing one small snapshot file between devices — the same
